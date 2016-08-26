@@ -1,0 +1,45 @@
+{{ define "index" }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+    <title>go-bookit</title>
+    <link rel="shortcut icon" href="/public/img/favicon.ico"/>
+
+    <!-- Scripts -->
+    <script src="/public/js/material.min.js"></script>
+    <script src="/public/js/dialog-polyfill.js"></script>
+
+    <!-- Page styles-->
+
+    <!--Google MD-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="/public/css/material.min.css">
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <link rel="stylesheet" type="text/css" href="/public/css/dialog-polyfill.css" />
+
+    <style>
+    #view-source {
+      position: fixed;
+      display: block;
+      right: 0;
+      bottom: 0;
+      margin-right: 40px;
+      margin-bottom: 40px;
+      z-index: 900;
+    }
+    </style>
+  </head>
+
+  <body>
+
+    {{ template "layout" }}
+
+  </body>
+
+{{ end }}
