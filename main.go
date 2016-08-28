@@ -34,9 +34,9 @@ type neuteredReaddirFile struct {
 
 //TODO Split booking struct? Create one for each value in parseForm?
 type booking struct {
-	RespContCustomer []string
-	RespContSeller   []string
-	ProjectCode      []string
+	RespContCustomer string
+	RespContSeller   string
+	ProjectCode      string
 	GoBookItID       string
 }
 
@@ -69,39 +69,13 @@ func check(e error) {
 
 func writeJSON(s bookingslice, r *http.Request, id string) {
 
-	if _, err := os.Stat("bookings.json"); err == nil && r.Method != "GET" {
-		//TODO Build logic to add bookings into the JSON file. Use unique id to add a new booking,
-		//need to rebuild structs to get a better JSON file
-		data, err := ioutil.ReadFile("bookings.json")
-		check(err)
+	//Save booking data to JSON file, one file for each booking, this should be transferred to postgres db, but will suffice for now
+	b, err := json.MarshalIndent(s, "", "\t")
+	check(err)
 
-		//TODO need to check this, something is happening atleast...
-		var readBooking bookingslice
-		e := json.Unmarshal(data, &readBooking)
-		check(e)
+	e := ioutil.WriteFile("GB"+id+".json", b, 0644)
+	check(e)
 
-		fmt.Println(s)
-		fmt.Println(readBooking)
-
-	} else {
-		//Save booking data to JSON file
-		b, err := json.MarshalIndent(s, "", "\t")
-		check(err)
-
-		/*
-			//Not done yet, will indent JSON however, mismatch of types in ioutil.WriteFile and json.Indent.
-			var out bytes.Buffer
-			json.Indent(&out, b, "", "\t")
-
-			d, err := out.WriteTo(os.Stdout)
-			fmt.Println(d)
-			check(err)
-		*/
-
-		e := ioutil.WriteFile("bookings.json", b, 0644)
-		check(e)
-
-	}
 }
 
 //Displaying start page of app
@@ -131,16 +105,16 @@ func handleBooking(w http.ResponseWriter, r *http.Request) {
 		check(err)
 
 		s.Bookings = append(s.Bookings, booking{
-			RespContCustomer: r.Form["respContCust"],
-			RespContSeller:   r.Form["respContSeller"],
-			ProjectCode:      r.Form["projectCode"],
-			GoBookItID:       "GB-" + bookingid})
+			RespContCustomer: r.FormValue("respContCust"),
+			RespContSeller:   r.FormValue("respContSeller"),
+			ProjectCode:      r.FormValue("projectCode"),
+			GoBookItID:       "GB" + bookingid})
 
 		//Send bookingslice and http.Request to function to create json
 		writeJSON(s, r, bookingid)
 
 		//Load frontPage again
-		loadIndex(w, r)
+		http.Redirect(w, r, "/", 303)
 	}
 }
 
