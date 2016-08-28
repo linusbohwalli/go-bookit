@@ -1,37 +1,51 @@
 {{ define "layout" }}
 
 <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-  <div class="android-header mdl-layout__header mdl-layout__header--waterfall">
+  <div class="bookit-header mdl-layout__header mdl-layout__header--waterfall">
      <div class="mdl-layout__header-row">
-       <span class="android-title mdl-layout-title">
+       <span class="bookit-title mdl-layout-title">
          <a href="/"><img class="bookit-logo-image" src="public/img/pig-icon.png"></a>
        </span>
 
        <!-- Add spacer, to align navigation to the right in desktop -->
-       <div class="android-header-spacer mdl-layout-spacer"></div>
+       <div class="bookit-header-spacer mdl-layout-spacer"></div>
 
        <!-- Navigation -->
-       <div class="android-navigation-container">
-         <nav class="android-navigation mdl-navigation">
+       <div class="bookit-navigation-container">
+         <nav class="bookit-navigation mdl-navigation">
            <button class="mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect" id="qb">
-             <div id="tt1" class="icon material-icons">add</div>
-             <div class="mdl-tooltip" for="tt1">
+             <div class="icon material-icons">add</div>
+             <div class="mdl-tooltip" for="qb">
              Quick booking - Next slot available
              </div>
            </button>
            <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right mdl-js-ripple-effect" for="qb">
-             <li class="mdl-menu__item">Connection Setup</li>
-             <li class="mdl-menu__item">Static mapping</li>
-             <li disabled class="mdl-menu__item">Format</li>
+             <li>
+               <a class="mdl-menu__item" href="/new:user:booking:connection">Connection Setup</a>
+             </li>
+             <li>
+               <a class="mdl-menu__item" href="/new:user:booking:staticmapping">Enrichment &amp; Validation</a>
+             </li>
+             <li>
+               <a class="mdl-menu__item" href="/new:user:booking:format">Format</a>
+             </li>
            </ul>
-           <a class="mdl-navigation__link mdl-typography--text-lowercase" href="">FAQ</a>
+          <a href="/faq">
+            <button id="faq" class="mdl-button mdl-js-button">FAQ</button>
+            <div for="faq" class="mdl-tooltip">
+             Frequently asked questions
+            </div>
+          </a>
          </nav>
        </div>
-       <span class="android-mobile-title mdl-layout-title"></span>
-       <button class="android-more-button mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect" id="more-button">
-         <i class="material-icons">more_vert</i>
+       <span class="bookit-mobile-title mdl-layout-title"></span>
+       <button class="bookit-more-button mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect" id="rightmenu">
+         <div class="material-icons">more_vert</div>
+         <div class="mdl-tooltip" for="rightmenu">
+           General user settings
+         </div>
        </button>
-       <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right mdl-js-ripple-effect" for="more-button">
+       <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right mdl-js-ripple-effect" for="rightmenu">
          <li class="mdl-menu__item">General</li>
          <li class="mdl-menu__item">User settings</li>
          <li disabled class="mdl-menu__item">N/A</li>
@@ -44,10 +58,8 @@
    {{ template "drawer" }}
 
    <!-- Start of regular page, calender/leadtimes/next free time?-->
-   <!-- {{ template "content" }} -->
-   {{ template "qb" }}
-
-   <!-- End of content page-->
-   <div class="android-content mdl-layout__content"></div>
+   <main class="mdl-layout__content">
+     {{ template "content" }}
+   </main>
 </div>
 {{ end }}

@@ -3,13 +3,12 @@
 <button type="button" class="mdl-button show-modal">Connection setup</button>
   <dialog class="mdl-dialog">
     <div class="mdl-dialog__content">
-
-      <p id="requester">
+     <p id="requester">
         Current Requester to be shown
       </p>
       <form action="/booked" method="post">
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-          <input class="mdl-textfield__input" type="text" name="projectCode" id="projectCode" pattern="[A-Za-z0-9-]*">
+          <input class="mdl-textfield__input" type="text" name="projectCode" id="projectCode" pattern="[A-Za-z0-9-]+">
           <label class="mdl-textfield__label" for="projectCode">Project code</label>
           <span class="mdl-textfield__error">Letters, numbers and dashes only</span>
         </div>
@@ -28,18 +27,6 @@
       </form>
     </div>
   </dialog>
-  <script>
-    var dialog = document.querySelector('dialog');
-    var showModalButton = document.querySelector('.show-modal');
-    if (! dialog.showModal) {
-      dialogPolyfill.registerDialog(dialog);
-    }
-    showModalButton.addEventListener('click', function() {
-      dialog.showModal();
-    });
-    dialog.querySelector('.close').addEventListener('click', function() {
-      dialog.close();
-    });
-  </script>
+  <script src="/public/js/dialog.js"></script>
 
 {{ end }}
