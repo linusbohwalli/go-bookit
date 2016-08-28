@@ -80,10 +80,18 @@ func writeJSON(s bookingslice, r *http.Request, id string) {
 
 //Displaying start page of app
 func loadIndex(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("index.html", "public/templates/layout.tmpl", "public/templates/drawer.tmpl", "public/templates/welcome.tmpl", "public/templates/calender.tmpl", "public/templates/qb.tmpl")
-	check(err)
+	if string(r.URL.Path[1:]) == "new:user:booking:connection" {
+		t, err := template.ParseFiles("index.html", "public/templates/layout.tmpl", "public/templates/drawer.tmpl", "public/templates/content.tmpl", "public/templates/calender.tmpl", "public/templates/connection.tmpl")
+		check(err)
 
-	t.ExecuteTemplate(w, "index", "")
+		t.ExecuteTemplate(w, "index", "")
+	} else {
+		t, err := template.ParseFiles("index.html", "public/templates/layout.tmpl", "public/templates/drawer.tmpl", "public/templates/content.tmpl", "public/templates/calender.tmpl", "public/templates/leadtime.tmpl")
+		check(err)
+
+		t.ExecuteTemplate(w, "index", "")
+	}
+
 }
 
 func handleBooking(w http.ResponseWriter, r *http.Request) {
