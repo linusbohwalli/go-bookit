@@ -2,13 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
+	"time"
 
 	//non default packages
+
 	"github.com/ventu-io/go-shortid"
 )
 
@@ -37,11 +39,17 @@ type booking struct {
 	RespContCustomer string
 	RespContSeller   string
 	ProjectCode      string
-	GoBookItID       string
+	Bookingid        string
+	BookingDate      time.Time
 }
 
-type bookingslice struct {
-	Bookings []booking
+type bookingheader struct {
+	UUID     string
+	Bookings booking
+}
+
+type bookingheaders struct {
+	bookingheaders []bookingheader
 }
 
 //Package functions
@@ -60,38 +68,79 @@ func (f neuteredReaddirFile) Readdir(count int) ([]os.FileInfo, error) {
 	return nil, nil
 }
 
-//TODO Func to check for error, if error found, log.Fatal
-func check(e error) {
-	if e != nil {
-		fmt.Println(e)
+func writeJSON(dat bookingheader, w http.ResponseWriter, r *http.Request) {
+
+	if _, err := os.Stat("bookings.json"); err == nil && r.Method != "GET" {
+		// TODO: fix logic for appending more information to JSON, open and resave?
+		//Read JSON
+		data, err := ioutil.ReadFile("bookings.json")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var booking []bookingheader
+		e := json.Unmarshal(data, &booking)
+		if e != nil {
+			log.Fatal(e)
+		}
+
+		booking = append(booking, dat)
+
+		b, err := json.MarshalIndent(booking, "", "\t")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err := ioutil.WriteFile("bookings.json", b, 0644); err != nil {
+			log.Fatal(err)
+		}
+
+	} else {
+
+		//Save booking data to JSON file, one file for each booking, this should be transferred to postgres db, but will suffice for now
+		b, err := json.MarshalIndent(dat, "", "\t")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err := ioutil.WriteFile("bookings.json", b, 0644); err != nil {
+			log.Fatal(err)
+		}
 	}
-}
-
-func writeJSON(s bookingslice, r *http.Request, id string) {
-
-	//Save booking data to JSON file, one file for each booking, this should be transferred to postgres db, but will suffice for now
-	b, err := json.MarshalIndent(s, "", "\t")
-	check(err)
-
-	e := ioutil.WriteFile("GB"+id+".json", b, 0644)
-	check(e)
-
 }
 
 //Displaying start page of app
 func loadIndex(w http.ResponseWriter, r *http.Request) {
-	if string(r.URL.Path[1:]) == "new:user:booking:connection" {
+
+	switch string(r.URL.Path[1:]) {
+	case "new:user:booking:connection":
 		t, err := template.ParseFiles("index.html", "public/templates/layout.tmpl", "public/templates/drawer.tmpl", "public/templates/content.tmpl", "public/templates/calender.tmpl", "public/templates/connection.tmpl")
-		check(err)
-
+		if err != nil {
+			log.Fatal(err)
+		}
 		t.ExecuteTemplate(w, "index", "")
-	} else {
+
+	case "show:user:booking":
+		t, err := template.ParseFiles("index.html", "public/templates/layout.tmpl", "public/templates/drawer.tmpl", "public/templates/content.tmpl", "public/templates/calender.tmpl", "public/templates/showbookings.tmpl")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		b, err := displayBooking()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		t.ExecuteTemplate(w, "index", b)
+
+	default:
 		t, err := template.ParseFiles("index.html", "public/templates/layout.tmpl", "public/templates/drawer.tmpl", "public/templates/content.tmpl", "public/templates/calender.tmpl", "public/templates/leadtime.tmpl")
-		check(err)
-
+		if err != nil {
+			log.Fatal(err)
+		}
 		t.ExecuteTemplate(w, "index", "")
-	}
 
+	}
 }
 
 func handleBooking(w http.ResponseWriter, r *http.Request) {
@@ -103,27 +152,38 @@ func handleBooking(w http.ResponseWriter, r *http.Request) {
 
 		//This part will parse the booking from the user
 		err := r.ParseForm()
-		check(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		//Using structs to structure JSON file
-		var s bookingslice
-
-		//Create unique ID to be used as GoBookItID (FT-ID)
+		//Create unique ID to be used as GoBookItID (GB-ID)
 		bookingid, err := shortid.Generate()
-		check(err)
+		bookingid = "GB" + bookingid
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		s.Bookings = append(s.Bookings, booking{
-			RespContCustomer: r.FormValue("respContCust"),
-			RespContSeller:   r.FormValue("respContSeller"),
-			ProjectCode:      r.FormValue("projectCode"),
-			GoBookItID:       "GB" + bookingid})
+		currDate := time.Now()
+
+		dat := bookingheader{bookingid,
+			booking{r.FormValue("respContCust"),
+				r.FormValue("respContSeller"),
+				r.FormValue("projectCode"),
+				bookingid,
+				currDate}}
 
 		//Send bookingslice and http.Request to function to create json
-		writeJSON(s, r, bookingid)
+		writeJSON(dat, w, r)
 
 		//Load frontPage again
 		http.Redirect(w, r, "/", 303)
 	}
+}
+
+func displayBooking() (booking, error) {
+
+	return booking{Bookingid: "test2"}, nil
+
 }
 
 func main() {
@@ -134,6 +194,6 @@ func main() {
 	fs := justFilesFilesystem{http.Dir("public/")}
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(fs)))
 	//Listen and Serve the files
-	http.ListenAndServe(":8080", nil)
-	//beego.Run()
+	log.Fatal(http.ListenAndServe(":8080", nil))
+
 }
