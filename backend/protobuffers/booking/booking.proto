@@ -1,0 +1,13 @@
+syntax = "proto3";
+package BookingProto;
+
+
+
+message Booking {
+	string UUID = 1;
+	string Bookingid = 2;
+	string BookingDate = 3;
+	string RespContCustomer = 4;
+	string RespContSeller = 5;
+	string ProjectCode = 6;
+}

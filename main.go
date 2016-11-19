@@ -1,199 +1,119 @@
 package main
 
 import (
-	"encoding/json"
-	"html/template"
-	"io/ioutil"
+	"bufio"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
 	//non default packages
+	pb "github.com/linusbohwalli/ng-go-bookit/backend/protobuffers/booking"
 
+	"github.com/golang/protobuf/proto"
+	"github.com/satori/go.uuid"
 	"github.com/ventu-io/go-shortid"
 )
 
-//import "github.com/astaxie/beego"
+//*** Global structs ***
 
-//Global structs
-//No Global structs yet
+//Defines how a booking looks like, used in protobuf message
 
-//Global functions
-//No Global functions yet
+//*** Global Variables ***
+//*** Global Methods ***
 
-//Package structs
+//*** Global Functions ***
 
-//Below struct is part of blocking directory listing
-type justFilesFilesystem struct {
-	fs http.FileSystem
-}
+//init always runs when program is started
+//func init() {
+//}
 
-//Below struct is part of blocking directory listing
-type neuteredReaddirFile struct {
-	http.File
-}
+func createBooking() (b []byte, e error) {
 
-//TODO Split booking struct? Create one for each value in parseForm?
-type booking struct {
-	RespContCustomer string
-	RespContSeller   string
-	ProjectCode      string
-	Bookingid        string
-	BookingDate      time.Time
-}
+	//Create new UUID for each booking
+	newUUID := uuid.NewV4().String()
 
-type bookingheader struct {
-	UUID     string
-	Bookings booking
-}
-
-type bookingheaders struct {
-	bookingheaders []bookingheader
-}
-
-//Package functions
-
-//Below function is part of blocking directory listing
-func (fs justFilesFilesystem) Open(name string) (http.File, error) {
-	f, err := fs.fs.Open(name)
+	//Create unique ID to be used as GoBookItID (GB-ID)
+	id, err := shortid.Generate()
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
-	return neuteredReaddirFile{f}, nil
-}
+	bookingid := "GB" + id
 
-//Below function is part of blocking directory listing
-func (f neuteredReaddirFile) Readdir(count int) ([]os.FileInfo, error) {
-	return nil, nil
-}
+	//Actual booking create time
+	currDate := time.Now().String()
 
-func writeJSON(dat bookingheader, w http.ResponseWriter, r *http.Request) {
+	//Fetch Responsible contact for customer from http.request
+	respContCustomer := "testValue1"
 
-	if _, err := os.Stat("bookings.json"); err == nil && r.Method != "GET" {
-		// TODO: fix logic for appending more information to JSON, open and resave?
-		//Read JSON
-		data, err := ioutil.ReadFile("bookings.json")
-		if err != nil {
-			log.Fatal(err)
-		}
+	//Fetch Responsible seller contact from http.request
+	respContSeller := "testValue2"
 
-		var booking []bookingheader
-		e := json.Unmarshal(data, &booking)
-		if e != nil {
-			log.Fatal(e)
-		}
+	//Fetch project code from http.request
+	projectCode := "testValue3"
 
-		booking = append(booking, dat)
-
-		b, err := json.MarshalIndent(booking, "", "\t")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := ioutil.WriteFile("bookings.json", b, 0644); err != nil {
-			log.Fatal(err)
-		}
-
-	} else {
-
-		//Save booking data to JSON file, one file for each booking, this should be transferred to postgres db, but will suffice for now
-		b, err := json.MarshalIndent(dat, "", "\t")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := ioutil.WriteFile("bookings.json", b, 0644); err != nil {
-			log.Fatal(err)
-		}
+	bookingData := &pb.Booking{
+		UUID:             newUUID,
+		Bookingid:        bookingid,
+		BookingDate:      currDate,
+		RespContCustomer: respContCustomer,
+		RespContSeller:   respContSeller,
+		ProjectCode:      projectCode,
 	}
-}
 
-//Displaying start page of app
-func loadIndex(w http.ResponseWriter, r *http.Request) {
-
-	switch string(r.URL.Path[1:]) {
-	case "new:user:booking:connection":
-		t, err := template.ParseFiles("index.html", "public/templates/layout.tmpl", "public/templates/drawer.tmpl", "public/templates/content.tmpl", "public/templates/calender.tmpl", "public/templates/connection.tmpl")
-		if err != nil {
-			log.Fatal(err)
-		}
-		t.ExecuteTemplate(w, "index", "")
-
-	case "show:user:booking":
-		t, err := template.ParseFiles("index.html", "public/templates/layout.tmpl", "public/templates/drawer.tmpl", "public/templates/content.tmpl", "public/templates/calender.tmpl", "public/templates/showbookings.tmpl")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		b, err := displayBooking()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		t.ExecuteTemplate(w, "index", b)
-
-	default:
-		t, err := template.ParseFiles("index.html", "public/templates/layout.tmpl", "public/templates/drawer.tmpl", "public/templates/content.tmpl", "public/templates/calender.tmpl", "public/templates/leadtime.tmpl")
-		if err != nil {
-			log.Fatal(err)
-		}
-		t.ExecuteTemplate(w, "index", "")
-
+	out, err := proto.Marshal(bookingData)
+	if err != nil {
+		log.Fatal(err)
 	}
-}
+	return out, nil
 
-func handleBooking(w http.ResponseWriter, r *http.Request) {
-	//This part will first check if user logs on to url /booked instead of submitting a form
-	if r.Method == "GET" {
-		//redirect to frontpage
-		http.Redirect(w, r, "/", 303)
-	} else {
-
-		//This part will parse the booking from the user
-		err := r.ParseForm()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		//Create unique ID to be used as GoBookItID (GB-ID)
-		bookingid, err := shortid.Generate()
-		bookingid = "GB" + bookingid
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		currDate := time.Now()
-
-		dat := bookingheader{bookingid,
-			booking{r.FormValue("respContCust"),
-				r.FormValue("respContSeller"),
-				r.FormValue("projectCode"),
-				bookingid,
-				currDate}}
-
-		//Send bookingslice and http.Request to function to create json
-		writeJSON(dat, w, r)
-
-		//Load frontPage again
-		http.Redirect(w, r, "/", 303)
-	}
-}
-
-func displayBooking() (booking, error) {
-
-	return booking{Bookingid: "test2"}, nil
-
+	/*	return &booking{newUUID,
+		bookingid,
+		currDate,
+		respContCustomer,
+		respContSeller,
+		projectCode}, nil
+	*/
 }
 
 func main() {
 
-	http.HandleFunc("/", loadIndex)
-	http.HandleFunc("/booked", handleBooking)
+	http.Handle("/src/", http.StripPrefix("/src", http.FileServer(http.Dir("./src"))))
+	http.Handle("/node_modules/", http.StripPrefix("/node_modules", http.FileServer(http.Dir("./node_modules"))))
+	//TODO: Build http server / http serve static files
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./src/index.html")
+	})
 
-	fs := justFilesFilesystem{http.Dir("public/")}
-	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(fs)))
-	//Listen and Serve the files
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	//Start web server
+	http.ListenAndServe(":8080", nil)
 
+	//implement API handling for booking / handleFunc
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("Do you want to make a booking?: ")
+	ans := scanner.Scan()
+	if ans && scanner.Text() == "yes" {
+
+		b, err := createBooking()
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println("Slice of bytes: ", b)
+
+		//Send back to http that booking is completed, with booking info
+		fmt.Println("booking complete")
+
+		fmt.Print("Do you want to look at the booking result?: ")
+		ans2 := scanner.Scan()
+		if ans2 && scanner.Text() == "yes" {
+			//unmarshal proto
+			res := &pb.Booking{}
+			err = proto.Unmarshal(b, res)
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println("Booking result: ", res, "     printlninign works aswell")
+		}
+	}
 }
