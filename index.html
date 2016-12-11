@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+    <title>go-bookit</title>
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <base href="/">
+    <!-- Scripts -->
+    <script src="/static/js/material.min.js"></script>
+
+    <!-- Load libraries -->
+
+     <!-- Page styles-->
+     <link rel="stylesheet" href="/static/css/material.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+    #view-source {
+      position: fixed;
+      display: block;
+      right: 0;
+      bottom: 0;
+      margin-right: 40px;
+      margin-bottom: 40px;
+      z-index: 900;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+      <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+          <!-- Title -->
+          <span class="mdl-layout-title">Title</span>
+          <!-- Add spacer, to align navigation to the right -->
+          <div class="mdl-layout-spacer"></div>
+          <!-- Navigation. We hide it in small screens. -->
+          <nav class="mdl-navigation mdl-layout--large-screen-only">
+            <a class="mdl-navigation__link" href="">Link</a>
+            <a class="mdl-navigation__link" href="">Link</a>
+          </nav>
+
+
+        </div>
+      </header>
+      <div class="mdl-layout__drawer">
+    <span class="mdl-layout-title">Title</span>
+    <nav class="mdl-navigation">
+      <a class="mdl-navigation__link" href="">Link</a>
+      <a class="mdl-navigation__link" href="">Link</a>
+      <a class="mdl-navigation__link" href="">Link</a>
+      <a class="mdl-navigation__link" href="">Link</a>
+    </nav>
+  </div>
+
+
+      <main class="mdl-layout__content">
+
+         <div class="page-content" id="top">
+
+           <form action="/bookThis" method="post">
+             Responsible Contact for the customer:<input type="text" name="RespContCustomer">
+             Responsible Contact for the seller:<input type="text" name="RespContSeller">
+             Project code:<input type="text" name="ProjectCode">
+             <button type="submit">Book it!</button>
+           </form>
+
+           <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+             <div class="mdl-tabs__tab-bar">
+                 <a href="#resource1-panel" class="mdl-tabs__tab is-active">resource1</a>
+                 <a href="#resource2-panel" class="mdl-tabs__tab">resource2</a>
+                 <a href="#resource3-panel" class="mdl-tabs__tab">resource3</a>
+             </div>
+           <div class="mdl-tabs__panel is-active" id="resource1-panel">
+            <div class="mdl-grid">
+              <div class="mdl-cell mdl-cell--1-col">1</div>
+              <div class="mdl-cell mdl-cell--1-col">1</div>
+              <div class="mdl-cell mdl-cell--1-col">1</div>
+              <div class="mdl-cell mdl-cell--1-col">1</div>
+            </div>
+          </div>
+          <div class="mdl-tabs__panel" id="resource2-panel">
+           <div class="mdl-grid">
+             <div class="mdl-cell mdl-cell--1-col">2</div>
+             <div class="mdl-cell mdl-cell--1-col">2</div>
+             <div class="mdl-cell mdl-cell--1-col">2</div>
+             <div class="mdl-cell mdl-cell--1-col">2</div>
+           </div>
+         </div>
+         <div class="mdl-tabs__panel" id="resource3-panel">
+          <div class="mdl-grid">
+            <div class="mdl-cell mdl-cell--4-col">3</div>
+            <div class="mdl-cell mdl-cell--4-col">3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+      </main>
+      <footer class="mdl-mini-footer">
+        <div class="mdl-mini-footer__left-section">
+          <div class="mdl-logo">Title</div>
+          <ul class="mdl-mini-footer__link-list">
+            <li><a href="#">FooterLink</a></li>
+            <li><a href="#">FooterLink</a></li>
+          </ul>
+        </div>
+        <div class="mdl-mini-footer__right-section">
+          <ul class="mdl-mini-footer__link-list">
+            <li><a href="#top">Top of the page</a></li>
+          </ul>
+        </div>
+      </footer>
+</div>
+</body>
+</html>

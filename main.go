@@ -1,119 +1,171 @@
 package main
 
 import (
+	//standard lib packages
 	"bufio"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
-	//non default packages
-	pb "github.com/linusbohwalli/ng-go-bookit/backend/protobuffers/booking"
-
-	"github.com/golang/protobuf/proto"
-	"github.com/satori/go.uuid"
-	"github.com/ventu-io/go-shortid"
+	"github.com/linusbohwalli/go-bookit/backend/handlers/booking"
+	//non default packages - communicaty packages
+	//go-bookit packages
 )
 
-//*** Global structs ***
+//Main package shoud tie together dependencies
 
-//Defines how a booking looks like, used in protobuf message
-
-//*** Global Variables ***
-//*** Global Methods ***
-
-//*** Global Functions ***
+//*** Package Structs ***
+//*** Package Variables ***
+//*** Package Methods ***
+//*** Package Functions ***
 
 //init always runs when program is started
 //func init() {
 //}
 
-func createBooking() (b []byte, e error) {
+//ONLY used for testing purposes
+func handleNewBooking() {
 
-	//Create new UUID for each booking
-	newUUID := uuid.NewV4().String()
+	done := false
+	done2 := false
+	done3 := false
 
-	//Create unique ID to be used as GoBookItID (GB-ID)
-	id, err := shortid.Generate()
-	if err != nil {
-		log.Fatal(err)
-	}
-	bookingid := "GB" + id
-
-	//Actual booking create time
-	currDate := time.Now().String()
-
-	//Fetch Responsible contact for customer from http.request
-	respContCustomer := "testValue1"
-
-	//Fetch Responsible seller contact from http.request
-	respContSeller := "testValue2"
-
-	//Fetch project code from http.request
-	projectCode := "testValue3"
-
-	bookingData := &pb.Booking{
-		UUID:             newUUID,
-		Bookingid:        bookingid,
-		BookingDate:      currDate,
-		RespContCustomer: respContCustomer,
-		RespContSeller:   respContSeller,
-		ProjectCode:      projectCode,
-	}
-
-	out, err := proto.Marshal(bookingData)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return out, nil
-
-	/*	return &booking{newUUID,
-		bookingid,
-		currDate,
-		respContCustomer,
-		respContSeller,
-		projectCode}, nil
-	*/
-}
-
-func main() {
-
-	http.Handle("/src/", http.StripPrefix("/src", http.FileServer(http.Dir("./src"))))
-	http.Handle("/node_modules/", http.StripPrefix("/node_modules", http.FileServer(http.Dir("./node_modules"))))
-	//TODO: Build http server / http serve static files
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./src/index.html")
-	})
-
-	//Start web server
-	http.ListenAndServe(":8080", nil)
-
-	//implement API handling for booking / handleFunc
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("Do you want to make a booking?: ")
 	ans := scanner.Scan()
-	if ans && scanner.Text() == "yes" {
-
-		b, err := createBooking()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println("Slice of bytes: ", b)
-
-		//Send back to http that booking is completed, with booking info
-		fmt.Println("booking complete")
-
-		fmt.Print("Do you want to look at the booking result?: ")
-		ans2 := scanner.Scan()
-		if ans2 && scanner.Text() == "yes" {
-			//unmarshal proto
-			res := &pb.Booking{}
-			err = proto.Unmarshal(b, res)
+	switch {
+	case ans && scanner.Text() == "yes":
+		scanner1 := bufio.NewScanner(os.Stdin)
+		fmt.Print("How many bookings do you want to make?: ")
+		ans1 := scanner1.Scan()
+		if ans1 {
+			newAns1, err := strconv.Atoi(scanner1.Text())
 			if err != nil {
-				fmt.Println(err)
+				log.Fatal(err)
 			}
-			fmt.Println("Booking result: ", res, "     printlninign works aswell")
+			for i := 0; i < newAns1; i++ {
+				bookingid, err := handlers.CreateBooking()
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println("Your booking ID is:", bookingid, "save it to check your status")
+			}
+		}
+
+		done = true
+		//Send back to http that booking is completed, with booking info
+
+	case ans && scanner.Text() != "yes":
+
+		done = true
+		fmt.Println("no booking done, please try again")
+	}
+
+	if done {
+		time.Sleep(3 * time.Second)
+		scanner2 := bufio.NewScanner(os.Stdin)
+		fmt.Print("Do you want to see bookings in db?: ")
+		ans2 := scanner2.Scan()
+		switch {
+		case ans2 && scanner2.Text() == "yes":
+
+			scanner3 := bufio.NewScanner(os.Stdin)
+			fmt.Print("what is the search id: ")
+			ans3 := scanner3.Scan()
+			if ans3 {
+				searchID := scanner3.Text()
+
+				res, err := handlers.GetBooking(searchID)
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println("here is the result: ", string(res))
+				done2 = true
+
+				//		fmt.Println(res)
+				//To only print JSON data, just print it as a string.
+
+			}
+		case ans2 && scanner2.Text() != "yes":
+			done2 = true
 		}
 	}
+
+	if done2 {
+		scanner = bufio.NewScanner(os.Stdin)
+		fmt.Print("Do you want to delete a booking?: ")
+		ans = scanner.Scan()
+
+		if ans && scanner.Text() == "yes" {
+			scanner = bufio.NewScanner(os.Stdin)
+			fmt.Print("Please enter the id you want to delete: ")
+			ans = scanner.Scan()
+
+			if ans {
+				deleteID := scanner.Text()
+
+				id, booking, err := handlers.DeleteBooking(deleteID)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fmt.Printf("the following booking with ID: %v have been deleted", id)
+				fmt.Println("here is the result: ", string(booking))
+				done3 = true
+
+			}
+		} else if ans && scanner.Text() != "yes" {
+			done3 = true
+		}
+	}
+	if done3 {
+		scanner = bufio.NewScanner(os.Stdin)
+		fmt.Print("Do you want to update a booking?: ")
+		ans = scanner.Scan()
+
+		if ans && scanner.Text() == "yes" {
+			scanner = bufio.NewScanner(os.Stdin)
+			fmt.Print("Please enter the json file you want to update: ")
+			ans = scanner.Scan()
+
+			if ans {
+				jsonString := scanner.Text()
+
+				data := []byte(jsonString)
+				res, err := handlers.UpdateBooking(data)
+				if err != nil {
+					log.Fatal(err)
+
+				}
+				fmt.Println("Answer from res variable: ", res)
+
+			}
+		}
+	}
+}
+
+func serveIndex(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("index.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	t.ExecuteTemplate(w, "index.html", nil)
+
+}
+func main() {
+	//	fs := http.FileServer(http.Dir("static"))
+	//	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	//	http.HandleFunc("/", serveIndex)
+	//	http.HandleFunc("/bookThis", bkiBooker.CreateBooking)
+
+	//	if err := http.ListenAndServe(":8080", nil); err != nil {
+	//		log.Fatal(err)
+	//	}
+
+	handleNewBooking()
 }

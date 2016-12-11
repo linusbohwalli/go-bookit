@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package internal;
+
+message Booking {
+
+int64 CreateTime = 1;
+int64 ModTime = 2;
+string ID =3;
+string BookingDate = 4;
+string RespContCustomer = 5;
+string RespContSeller = 6;
+string ProjectCode = 7;
+}
